@@ -6,7 +6,7 @@
 ## Description: Contains UI environment for running Mirrorboard
 ##      text prediction and supporting functions.
 
-import build, cmd, os, sys, mirror_functions
+import build, cmd, os, sys, mirror_functions, viterbi
 
 path_separator = "/"
 
@@ -46,7 +46,7 @@ def drawTest():
     print "* 2. Words from prefix "
     print "* 3. Dumb Mirrorboard "
     print "* 4. Viterbi Mirrorboard "
-    print "* 5. Change number of results (Current:",str(rslts),")"
+    print "* 5. Change number of results (Current:"+ str(rslts) +")"
     print "**************************************************************"
     
 def testLoop():
@@ -68,7 +68,11 @@ def testLoop():
             mirror_functions.getTopNext(w,'tran',rslts,"")
             wait()
         elif (ans == '4'):
-            print "You selected 4"
+            #viterbi mirrorboard
+            w = raw_input("Enter a mirrored word to predict word: ")
+            print viterbi.runViterbi(w, build.startProbs, build.transProbs, build.obsProbs)
+            wait()
+            
         elif (ans == '5'):
             r = raw_input("Select desired number of results (1-14): ")
             if (r.isdigit() and (int(r) in range(1,15))):

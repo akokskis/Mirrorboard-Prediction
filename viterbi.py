@@ -1,18 +1,18 @@
 #!/usr/bin/python
 
-import build
+#import build
 from math import log,exp
 import pprint
 
 # run some setup stuff
-build.unpickleTables()
+#build.unpickleTables()
 
-pp = pprint.PrettyPrinter(indent=4)
+#pp = pprint.PrettyPrinter(indent=4)
 tinyVal = 0.000000000000001#log(0.000000000000001)
 
 states_all = ('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q',
           'r','s','t','u','v','w','x','y','z','\'')
-states_leftH = ('a','b','c','d','e','f','g','g','e','f','d','s','v','v','w','q','q','r','s','t','r','v','w','x','t','z','a','z','x','\'')
+#states_leftH = ('a','b','c','d','e','f','g','g','e','f','d','s','v','v','w','q','q','r','s','t','r','v','w','x','t','z','a','z','x','\'')
 
 
 def initProbs():
@@ -77,15 +77,15 @@ def fixOtherProbs(p):
 observations = ('walk', 'shop', 'clean')
 
 #initial prob
-start_probability = formatStartProbs(build.startProbs)
+#start_probability = formatStartProbs(build.startProbs)
  
-transition_probability = formatTransProbs(build.transProbs)
+#transition_probability = formatTransProbs(build.transProbs)
 #{
 #   'Rainy' : {'Rainy': 0.7, 'Sunny': 0.3},
 #   'Sunny' : {'Rainy': 0.4, 'Sunny': 0.6},
 #   }
  
-emission_probability = formatObsProbs(build.obsProbs)
+#emission_probability = formatObsProbs(build.obsProbs)
 #{
 #   'Rainy' : {'walk': 0.1, 'shop': 0.4, 'clean': 0.5},
 #   'Sunny' : {'walk': 0.6, 'shop': 0.3, 'clean': 0.1},
@@ -165,3 +165,25 @@ def example():
         out += s
     return "most likely sequence: " + out
 
+# to be called from main. all probs come from build
+def runViterbi(obsStr, startP, transP, obsP):
+    # obs is a string. need to convert
+    obs = ()
+    for i in range(len(obsStr)):
+        obs += (obsStr[i],)
+    
+    start_probability = formatStartProbs(startP)
+    transition_probability = formatTransProbs(transP)
+    emission_probability = formatObsProbs(obsP)
+    global states_all
+    
+    (prob,path) = viterbi(obs,
+                   states_all,
+                   start_probability,
+                   transition_probability,
+                   emission_probability)
+    out = ""
+    for s in path:
+        out += s
+    return "Most likely sequence: " + out
+    

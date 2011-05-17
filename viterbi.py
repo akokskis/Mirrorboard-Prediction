@@ -163,4 +163,5 @@ def example():
     out = ""
     for s in path:
         out += s
-    return out
+    return "most likely sequence: " + out
+

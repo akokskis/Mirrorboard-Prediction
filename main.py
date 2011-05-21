@@ -18,6 +18,9 @@ testPath = "train"+ path_separator + testFile
 
 rslts = 6
 
+# variable to hold the viterbi object
+vit = None
+
 def wait():
     raw_input("[ Hit a key to continue ]")
 
@@ -69,8 +72,11 @@ def testLoop():
             wait()
         elif (ans == '4'):
             #viterbi mirrorboard
+            #if vit == None:
+            #    print "ERROR: Viterbi object not initialize properly.\nMakre sure tables are refreshed/loaded."
+            #else:
             w = raw_input("Enter a mirrored word to predict word: ")
-            print viterbi.runViterbi(w, build.startProbs, build.transProbs, build.obsProbs)
+            print vit.runViterbi(w)
             wait()
             
         elif (ans == '5'):
@@ -83,7 +89,7 @@ def testLoop():
             wait()
 
 def main():
-    global learnFile,testFile
+    global learnFile,testFile,vit
     while True:
         drawScreen()
         ans = raw_input("* Select an option: ")
@@ -92,11 +98,13 @@ def main():
             if (ans == '1'):
                 print "Refreshing all tables from file..."
                 build.refreshAll(learnFile)
+                vit = viterbi.viterbi(build.startProbs, build.transProbs, build.obsProbs)
                 print "Refreshing complete"
                 wait()
             elif (ans == '2'):
                 print "Unpickling tables..."
                 build.unpickleTables()
+                vit = viterbi.viterbi(build.startProbs, build.transProbs, build.obsProbs)
                 print "Unpickling complete."
                 wait()
             elif (ans == '3'):

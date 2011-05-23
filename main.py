@@ -6,25 +6,24 @@
 ## Description: Contains UI environment for running Mirrorboard
 ##      text prediction and supporting functions.
 
-import build, cmd, os, sys, mirror_functions, viterbi
+import build, cmd, os, sys, mirror_functions, viterbi, platform
 from cPickle import load, dump
 
-path_separator = "/"
-
-learnFile = "oz.txt"
-learnPath = "train"+ path_separator + learnFile
-
-testFile = "none"
-testPath = "train"+ path_separator + testFile
-
-rslts = 6
+#path_separator = "/"
+#
+#learnFile = "oz.txt"
+#learnPath = "train"+ path_separator + learnFile
+#
+#testFile = "none"
+#testPath = "train"+ path_separator + testFile
+#
+#rslts = 6
 
 mainConfig = {"path_separator":"/",
               "rslts":6,
               "learnFile":"oz.txt",
-              "learnPath":"train"+ path_separator + "oz.txt",
               "testFile": "none",
-              "testPath": "train"+ path_separator + "none" }
+              }
 
 # variable to hold the viterbi object
 vit = None
@@ -40,8 +39,8 @@ def saveConfig():
 def loadConfig():
     global mainConfig
     try:
-        outfile = open("config.pickle","r")
-        mainConfig = load(outfile)
+        infile = open("config.pickle","r")
+        mainConfig = load(infile)
         outfile.close()
     except:
         saveConfig()
@@ -119,6 +118,10 @@ def testLoop():
 def main():
     global mainConfig,vit
     loadConfig()
+    if (platform.system() == "Windows"):
+        # in case we're using... winblows
+        mainConfig['path_separator'] = "\\"
+        saveConfig()
     while True:
         drawScreen()
         ans = raw_input("* Select an option: ")

@@ -29,8 +29,27 @@ mainConfig = {"path_separator":"/",
 # variable to hold the viterbi object
 vit = None
 
+# save our current config. called anytime one of the config vars is modified
+def saveConfig():
+    global mainConfig
+    outfile = open("config.pickle","wb")
+    dump(mainConfig,outfile)
+    outfile.close()
+
+# load the config vars.  if none exist, we'll create new ones based on the defaults up top.
+def loadConfig():
+    global mainConfig
+    try:
+        outfile = open("config.pickle","r")
+        mainConfig = load(outfile)
+        outfile.close()
+    except:
+        saveConfig()
+        
+    
+    
 def wait():
-    raw_input("[ Hit a key to continue ]")
+    raw_input("[ Hit enter to continue ]")
 
 def drawScreen():
     #os.system('CLS')
@@ -91,6 +110,7 @@ def testLoop():
             r = raw_input("Select desired number of results (1-14): ")
             if (r.isdigit() and (int(r) in range(1,15))):
                 mainConfig['rslts'] = int(r)
+                saveConfig()
                 print "Updated successfully"
             else:
                 print "ERROR: Not a valid option. Enter 1-14 only."
@@ -98,6 +118,7 @@ def testLoop():
 
 def main():
     global mainConfig,vit
+    loadConfig()
     while True:
         drawScreen()
         ans = raw_input("* Select an option: ")
@@ -124,12 +145,15 @@ def main():
                     wait()
                 else:
                     mainConfig['learnFile'] = f
+                    saveConfig()
             elif (ans == '4'):
                 testLoop()
             elif (ans == '5'):
                 print "You selected 5"
             elif (ans == '6'):
                 print "You selected 6"
+                # herp derp
+                saveConfig()
 
 
 main()

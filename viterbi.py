@@ -19,8 +19,8 @@ class viterbi(object):
     
     def __init__(self, startP, transP, obsP):
         self.start_probability = self.__formatStartProbs__(startP)
-        self.transition_probability = self.__formatTransProbs(transP)
-        self.emission_probability = self.__formatObsProbs(obsP)
+        self.transition_probability = self.__formatTransProbs__(transP)
+        self.emission_probability = self.__formatObsProbs__(obsP)
     
     def __initProbs__(self):
         probs = {}
@@ -36,7 +36,7 @@ class viterbi(object):
         probs = self.__fixStartProbs__(probs)
         return probs
     
-    def __formatTransProbs(self,p):
+    def __formatTransProbs__(self,p):
         probs = self.__initProbs__()
         it = p.iteritems()
         for cur in it:
@@ -45,7 +45,7 @@ class viterbi(object):
     #    probs = fixOtherProbs(probs)
         return probs
     
-    def __formatObsProbs(self,p):
+    def __formatObsProbs__(self,p):
         probs = self.__initProbs__()
         it = p.iteritems()
         for cur in it:
@@ -89,13 +89,13 @@ class viterbi(object):
     #initial prob
     #start_probability = __formatStartProbs(build.startProbs)
      
-    #transition_probability = __formatTransProbs(build.transProbs)
+    #transition_probability = __formatTransProbs__(build.transProbs)
     #{
     #   'Rainy' : {'Rainy': 0.7, 'Sunny': 0.3},
     #   'Sunny' : {'Rainy': 0.4, 'Sunny': 0.6},
     #   }
      
-    #emission_probability = __formatObsProbs(build.obsProbs)
+    #emission_probability = __formatObsProbs__(build.obsProbs)
     #{
     #   'Rainy' : {'walk': 0.1, 'shop': 0.4, 'clean': 0.5},
     #   'Sunny' : {'walk': 0.6, 'shop': 0.3, 'clean': 0.1},
@@ -155,33 +155,23 @@ class viterbi(object):
         (prob, state) = max([(V[len(obs) - 1][y], y) for y in states])
         return (prob, path[state])
         
-        
-    def example():
-        observations = ()
-        x = raw_input("observations: ")
-        for i in range(len(x)):
-            observations += (x[i],)
-        #print observations
-        (prob,path) = viterbi(observations,
-                       states_all,
-                       start_probability,
-                       transition_probability,
-                       emission_probability)
-        out = ""
-        for s in path:
-            out += s
-        return "most likely sequence: " + out
+
     
     # to be called from main. all probs come from build
     def runViterbi(self, obsStr):#, startP, transP, obsP):
         # obs is a string. need to convert
+        mir_layout = "abcdefggefdsvvwqqrstrvwxtzazx"
         obs = ()
         for i in range(len(obsStr)):
+            if (obsStr[i] not in mir_layout):
+                print "Warning: Non-Mirrored input detected."
+                raw = raw_input("Please re-enter your string as mirrored input: ")
+                return viterbi.runViterbi(self, raw)
             obs += (obsStr[i],)
         
         #start_probability = __formatStartProbs(startP)
-        #transition_probability = __formatTransProbs(transP)
-        #emission_probability = __formatObsProbs(obsP)
+        #transition_probability = __formatTransProbs__(transP)
+        #emission_probability = __formatObsProbs__(obsP)
         global states_all
         
         (prob,path) = self.viterbize(obs,

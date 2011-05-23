@@ -117,31 +117,25 @@ class viterbi(object):
     
     # actually runs viterbi algo.  name changes to not collide with this class name
     def viterbize(self, obs, states, start_p, trans_p, emit_p):
-        global states_all #just the states at top of this file
         V = [{}]
         path = {}
      
         # Initialize base cases (t == 0)
-    #    print "************************************************"
-    #    pp.pprint(start_p)
-    #    print "************************************************"
-    #    pp.pprint(emit_p)
-    #    print "************************************************"
         for y in states:
-            #V[0][y] = start_p[y] * emit_p[y][obs[0]]
-            if (start_p[y] == {}):
-                tmp1 = log(0.000000000000001)
-                print "viterbi shit"
-            else:
-                tmp1 = start_p[y]
+            V[0][y] = start_p[y] * emit_p[y][obs[0]]
+#            if (start_p[y] == {}):
+#                tmp1 = log(0.000000000000001)
+#                print "viterbi shit"
+#            else:
+#            tmp1 = start_p[y]
     
-            try:
-                tmp2 = emit_p[y][obs[0]]
-            except KeyError:
-                tmp2 = log(0.000000000000001) #derp?!
-                print "viterbi damn"
+#            try:
+#            tmp2 = emit_p[y][obs[0]]
+#            except KeyError:
+#                tmp2 = log(0.000000000000001) #derp?!
+#                print "viterbi damn"
     
-            V[0][y] = tmp1 * tmp2
+#            V[0][y] = tmp1 * tmp2
             path[y] = [y]
      
         # Run Viterbi for t > 0

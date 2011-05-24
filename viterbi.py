@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
 #import build
-from math import log,exp
+from heapq import nlargest
 import pprint
-
+import pdb
 # run some setup stuff
 #build.unpickleTables()
 
-#pp = pprint.PrettyPrinter(indent=4)
+pp = pprint.PrettyPrinter(indent=4)
 #tinyVal = 0.000000000000001#log(0.000000000000001)
 class viterbi(object):
     states_all = ('a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q',
@@ -104,7 +104,7 @@ class viterbi(object):
     
     
     # Helps visualize the steps of Viterbi.
-    def print_dptable(V):
+    def print_dptable(self, V):
         print "    ",
         for i in range(len(V)): print "%7s" % ("%d" % i),
         print
@@ -112,55 +112,83 @@ class viterbi(object):
         for y in V[0].keys():
             print "%.5s: " % y,
             for t in range(len(V)):
-                print "%.7s" % ("%f" % V[t][y]),
+                print "%.9s" % ("%f" % V[t][y]),
             print
     
     # actually runs viterbi algo.  name changes to not collide with this class name
-    def viterbize(self, obs, states, start_p, trans_p, emit_p):
-        V = [{}]
-        path = {}
-     
+    def viterbize(self, obs, states, start_p, trans_p, emit_p, num=1):
+        #V = [{}]
+        #path = {}
+        #pdb.set_trace()
+        W = [] #wrapper for V
+        P = [] #wrapper for path
+        for i in range(num):
+            W.append([{}]) # wow.
+            P.append({})
+        
+        V = W[0]#[{}]
+        path = P[0]#{}
+        
+        
         # Initialize base cases (t == 0)
-        for y in states:
-            V[0][y] = start_p[y] * emit_p[y][obs[0]]
-#            if (start_p[y] == {}):
-#                tmp1 = log(0.000000000000001)
-#                print "viterbi shit"
-#            else:
-#            tmp1 = start_p[y]
-    
-#            try:
-#            tmp2 = emit_p[y][obs[0]]
-#            except KeyError:
-#                tmp2 = log(0.000000000000001) #derp?!
-#                print "viterbi damn"
-    
-#            V[0][y] = tmp1 * tmp2
-            path[y] = [y]
-     
+        for i in range(num):
+            for y in states:
+                W[i][0][y] = start_p[y] * emit_p[y][obs[0]]
+                #V[0][y] = start_p[y] * emit_p[y][obs[0]]
+                P[i][y] = [y]
+                #path[y] = [y]
+
         # Run Viterbi for t > 0
         for t in range(1,len(obs)):
-            V.append({})
-            newpath = {}
-     
+            NP = []
+            for i in range(num):
+                #V.append({})
+                W[i].append({})
+                #newpath = {}
+                NP.append({})
+
             for y in states:
-                (prob, state) = max( [ (V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0) for y0 in states] )
-                V[t][y] = prob
-                newpath[y] = path[state] + [y]
-     
+                #(prob, state) = max( [ (V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0) for y0 in states] )
+                tmp = []
+                for y0 in states:
+                    tmp.append((V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0))
+                maxN = nlargest(num,tmp)
+                
+                for i in range(num):
+                    #V[t][y] = prob
+                    W[i][t][y] = maxN[i][0]
+                    #newpath[y] = path[state] + [y]
+                    NP[i][y] = P[i][maxN[i][1]] + [y]
+
             # Don't need to remember the old paths
-            path = newpath
-     
+            for i in range(num):
+                #path = newpath
+                P[i] = NP[i]
+            #end for t in range...
+        pp.pprint("======={P}========")
+        pp.pprint(P)
+        pp.pprint("======={P}========")
     #    print_dptable(V)
         (prob, state) = max([(V[len(obs) - 1][y], y) for y in states])
+        tmp = []
+        for y in states:
+            tmp.append((V[len(obs) - 1][y], y))
+        maxN = nlargest(num,tmp)
+        pp.pprint("++++++++++++++")
+        pp.pprint(maxN)
+        pp.pprint("++++++++++++++")
+        for i in range(num):
+            pp.pprint(P[i][maxN[0][1]]) ############ WINNER WINNER CHICKEN DINNER
+        #pp.pprint(P[0][maxN[0][1]])
+        pp.pprint("++++++++++++++")
         return (prob, path[state])
-        
+
 
     
     # to be called from main. all probs come from build
-    def runViterbi(self, obsStr):#, startP, transP, obsP):
-        # obs is a string. need to convert
+    def runViterbi(self, obsStr, singleUse=False,):
         mir_layout = "abcdefggefdsvvwqqrstrvwxtzazx"
+        # obs is a string. need to convert
         obs = ()
         for i in range(len(obsStr)):
             if (obsStr[i] not in mir_layout):
@@ -178,10 +206,30 @@ class viterbi(object):
                            self.states_all,
                            self.start_probability,
                            self.transition_probability,
-                           self.emission_probability)
+                           self.emission_probability,
+                           4)
+        pp.pprint("===================================")
+        pp.pprint(prob)
+        pp.pprint(path)
+        pp.pprint("===================================")
+
         out = ""
+        #for word in path:
         for s in path:
             out += s
-        return "Most likely sequence: " + out
-        
+         #   out += "\n\t\t"
+
+        if singleUse:
+            return out
+        else:
+            return "Most likely sequence: " + out
     
+    # wrapper for runViterbi used for multiple words
+    def runViterbiMultiWord(self, obsStr):
+        seq = ""
+        for word in obsStr.split(" "):
+            seq += self.runViterbi(word, True) + " "
+        
+        return "Most likely sequence: " + seq[:-1] # that's all but the last char, which is a space anyways
+    
+

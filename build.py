@@ -1,17 +1,17 @@
 ## build.py
 ## Author: Ryan Kingston
-## Last Updated: 5/16/2011
+## Last Updated: 5/2011
 ## Description: Contains functions to convert a text input-stream
 ##      into bigram and probability tables for various prediction
 ##      algorithms such as Viterbi.
 
 from __future__ import division #floating-point division
-import os, re, time, string
+import os, re, time, string, operator
 from cPickle import load, dump
 import mirror_functions
 from pytrie import StringTrie as trie
 
-path_separator = "/"
+path_separator = "\\"
 
 ## Initialize corpus of words
 corpus = trie()
@@ -42,14 +42,6 @@ def sanitizeWord(n):
         word = re.sub(reg,'',word)
         return word
 
-def incrementInTable(x,y,t):
-        curKey = x + '|' + y
-        if t.has_key(curKey):
-                curCount = t.__getitem__(curKey)
-                t.__setitem__(curKey,curCount+1)
-        else:
-                t.__setitem__(curKey,1)
-
 def isEndofSentence(n):
         for c in string.punctuation:
                 if c == n[-1]: return True
@@ -59,14 +51,52 @@ def addObservation(c):
         m = mirror_functions.mirror(c)
         incrementInTable(m,c,obsbigrams)
 
-def addToCorpus(w):
-        if corpus.has_key(w):
-                curCount = corpus.__getitem__(w)
-                corpus.__setitem__(w,curCount+1)
+def incrementInTable(x,y,t):
+        curKey = x + '|' + y
+        if t.has_key(curKey):
+                curCount = t.__getitem__(curKey)
+                t.__setitem__(curKey,curCount+1)
         else:
-                corpus.__setitem__(w,1)
+                t.__setitem__(curKey,1)
 
-# TEMPORARY smoothing to get Viterbi working
+def incrementInTrie(key,trie):
+        if trie.has_key(key):
+                curCount = corpus.__getitem__(key)
+                trie.__setitem__(key,curCount+1)
+        else:
+                trie.__setitem__(key,1)
+                
+def incrementInDict(key,dic):
+        if dic.has_key(key):
+                dic[key] += 1
+        else:
+                dic[key] = 1
+
+def printStats():
+        length = {}
+        mirrors = {}
+        
+        for cur in corpus:
+                incrementInDict(len(cur),length)
+                incrementInDict(mirror_functions.mirrorCount(cur),mirrors)
+
+        length = sorted(length.iteritems(), key=operator.itemgetter(0))
+        mirrors = sorted(mirrors.iteritems(), key=operator.itemgetter(0))
+        
+        print " [Total Unique Words:", str(len(corpus)), "]"
+        #print " ======================================"
+        print " Length of Word\t Unique Occurrences"
+        print " --------------\t ------------------"
+        for cur in length:
+                print "\t",cur[0], "\t\t", cur[1]
+
+        print "\n # of Mirrors\t Unique Occurrences"
+        print " --------------\t -------------------"
+        for cur in mirrors:
+                print "\t", cur[0], "\t\t", cur[1]
+                
+
+# Add-One Smoothing
 # Note: Call after build but BEFORE build*Probs
 #       This alters counts, not probabilities
 def addOneCharSmooth():
@@ -136,6 +166,7 @@ def buildTables(s):
         ## careful of string overflows!
         for line in infile:
                 lineCount += 1
+                line = line.replace('\x97',' ') # remove long dashes
                 words = line.split()
                 firstword = ' '
                 secondword = ' '
@@ -161,7 +192,8 @@ def buildTables(s):
                                 secondletter = character
                                 incrementInTable(firstletter,secondletter,charbigrams)
                         ## - corpus -
-                        addToCorpus(word)
+                        incrementInTrie(word,corpus)
+                        
                         ## - wordbigrams -
                         incrementInTable(firstword,secondword,wordbigrams)
 
@@ -180,19 +212,19 @@ def buildTables(s):
 ##########################
 
 def refreshAll(s):
-        print "Building Counts..."
+        print "Building counts..."
         buildTables(s)
-        print "Smoothing Transition Counts..."
+        print "Smoothing transition counts..."
         addOneCharSmooth()
-        print "Smoothing Observation Counts..."
+        print "Smoothing observation counts..."
         addOneObsSmooth()
-        print "\nBuilding Start Probabilities..."
+        print "\nBuilding start probabilities..."
         buildStartProbs()
-        print "Building Transition Probabilities..."
+        print "Building transition probabilities..."
         buildTransitionProbs()
-        print "Building Observation Probabilities..."
+        print "Building observation probabilities..."
         buildObsProbs()
-        print "Pickling Tables..."
+        print "Pickling tables..."
         pickleTables()
 
     

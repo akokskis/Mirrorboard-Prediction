@@ -27,7 +27,6 @@ class viterbi(object):
         it = p.iteritems()
         for cur in it:
             probs[cur[0][2]] = cur[1]#log(cur[1]) #take just the letter and the prob. least neg is biggest
-        probs = self.__fixStartProbs__(probs) ##RJK - Unnecessary
         return probs
     
     def __formatTransProbs__(self,p):
@@ -36,7 +35,6 @@ class viterbi(object):
         for cur in it:
             tmp = probs[cur[0][0]]
             tmp[cur[0][2]] = cur[1]#log(cur[1])
-    # probs = fixOtherProbs(probs)
         return probs
     
     def __formatObsProbs__(self,p):
@@ -45,16 +43,8 @@ class viterbi(object):
         for cur in it:
             tmp = probs[cur[0][2]]
             tmp[cur[0][0]] = cur[1]#log(cur[1])
-    # probs = fixOtherProbs(probs)
         return probs
 
-    ##RJK - This is unnecessary and using "tinyVal" mucks up the distribution
-    def __fixStartProbs__(self,p):
-        for s in self.states_all:
-            if p[s] == {}:
-                print "shoot"
-                p[s] = tinyVal
-        return p
     
     # Helps visualize the steps of Viterbi.
     def print_dptable(self,V):
@@ -81,7 +71,7 @@ class viterbi(object):
             V[0][y] = start_p[y] * emit_p[y][obs[0]]
             path[y] = [y]
         
-        noMorePfx = False
+        
         # Run Viterbi for t > 0
         for t in range(1,len(obs)):
             V.append({})
@@ -92,7 +82,7 @@ class viterbi(object):
             #    V[t][y] = prob
             #    newpath[y] = path[state] + [y]
             #path = newpath
-
+            noMorePfx = False
             for y in states:
                 #(prob, state) = max( [ (V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0) for y0 in states] )
                 tmp = []
@@ -103,19 +93,27 @@ class viterbi(object):
                 if noMorePfx:
                     # ie: this is all fucked
                     (prob, state) = tmp[0]
+
                 else:
                     i = 0
                     pfx = "".join(path[tmp[i][1]]+[y])
-                    while (len(build.corpus.keys(prefix=pfx )) < 0):
+                    while ( len(build.corpus.keys(prefix=pfx )) < 1):
                         i += 1
+                        if i >= len(tmp):
+                            # there are no new prefixes of current path in the corpus.
+                            # dump out of the loop and just use the most likely
+                            break
                         pfx = "".join(path[tmp[i][1]]+[y])
                     
+
                     if (i == len(tmp)):
                         noMorePfx = True
                         i = 0
                     # what we want is the most likely state that is a prefix in the corpus
                     (prob, state) = tmp[i]
                 
+                ######
+                # can make sure we've got the word w1 by checking corpus agains: w1|
                                 
                 V[t][y] = prob
                 newpath[y] = path[state] + [y]
@@ -139,4 +137,4 @@ class viterbi(object):
                            self.transition_probability,
                            self.emission_probability)
 
-        return "".join(path)
+        return ["".join(path)]

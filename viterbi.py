@@ -1,5 +1,8 @@
 from math import log,exp
 import pprint
+import build
+
+pp = pprint.PrettyPrinter(indent=4)
 
 class viterbi(object):
     states_all = ("abcdefghijklmnopqrstuvwxyz\'")
@@ -54,7 +57,7 @@ class viterbi(object):
         return p
     
     # Helps visualize the steps of Viterbi.
-    def print_dptable(V):
+    def print_dptable(self,V):
         print " ",
         for i in range(len(V)): print "%7s" % ("%d" % i),
         print
@@ -77,18 +80,46 @@ class viterbi(object):
         for y in states:
             V[0][y] = start_p[y] * emit_p[y][obs[0]]
             path[y] = [y]
-     
+        
+        noMorePfx = False
         # Run Viterbi for t > 0
         for t in range(1,len(obs)):
             V.append({})
             newpath = {}
-     
+        
+            #for y in states:
+            #    (prob, state) = max( [ (V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0) for y0 in states] )
+            #    V[t][y] = prob
+            #    newpath[y] = path[state] + [y]
+            #path = newpath
+
             for y in states:
-                (prob, state) = max( [ (V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0) for y0 in states] )
+                #(prob, state) = max( [ (V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0) for y0 in states] )
+                tmp = []
+                for y0 in states:
+                    tmp.append((V[t-1][y0] * trans_p[y0][y] * emit_p[y][obs[t]], y0))
+                
+                tmp.sort(reverse=True)
+                if noMorePfx:
+                    # ie: this is all fucked
+                    (prob, state) = tmp[0]
+                else:
+                    i = 0
+                    pfx = "".join(path[tmp[i][1]]+[y])
+                    while (len(build.corpus.keys(prefix=pfx )) < 0):
+                        i += 1
+                        pfx = "".join(path[tmp[i][1]]+[y])
+                    
+                    if (i == len(tmp)):
+                        noMorePfx = True
+                        i = 0
+                    # what we want is the most likely state that is a prefix in the corpus
+                    (prob, state) = tmp[i]
+                
+                                
                 V[t][y] = prob
                 newpath[y] = path[state] + [y]
-            
-            
+
             
             # Don't need to remember the old paths
             path = newpath
